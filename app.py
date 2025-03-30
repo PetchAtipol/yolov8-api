@@ -19,7 +19,10 @@ load_dotenv()
 # ✅ Allow frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change to frontend domain in production
+    allow_origins=[
+    "https://chefsense.netlify.app",
+    "http://localhost:3000"
+    ],  # Change to frontend domain in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -39,6 +42,7 @@ if not firebase_admin._apps:
 MODEL_PATH = "models/best50epoch.pt"
 model = YOLO(MODEL_PATH)  # Automatically uses CPU or CUDA if available
 model.to('cpu')
+model.fuse()
 
 # ✅ Load class names from training config
 import yaml
@@ -97,7 +101,7 @@ async def detect_latest():
         img_array = np.array(image)
 
         # Run YOLOv8 detection
-        results = model(img_array, conf=0.25)
+        results = model(img_array, imgsz=320, conf=0.25)
 
         # Parse results
         detected_items = []
