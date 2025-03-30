@@ -28,6 +28,7 @@ app.add_middleware(
 
 # ✅ Firebase Configuration
 FIREBASE_CREDENTIALS = os.getenv('FIREBASE_CREDENTIALS')
+cred = credentials.Certificate(FIREBASE_CREDENTIALS)
 FIREBASE_BUCKET_NAME = os.getenv('FIREBASE_BUCKET_NAME')
 
 if not firebase_admin._apps:
