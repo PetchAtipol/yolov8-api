@@ -36,7 +36,7 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(cred, {"storageBucket": FIREBASE_BUCKET_NAME})
 
 # ✅ Load YOLOv8 Model
-MODEL_PATH = "models/best50epoch .pt"
+MODEL_PATH = "models/best50epoch.pt"
 model = YOLO(MODEL_PATH)  # Automatically uses CPU or CUDA if available
 model.to('cpu')
 
@@ -68,6 +68,10 @@ def get_latest_image_url():
 
     except Exception as e:
         return None, f"Error generating signed URL: {e}"
+
+@app.get("/")
+def root():
+    return {"message": "✅ Chefsense API is running!"}
 
 # ✅ FastAPI Route for Detection
 @app.get("/detect/latest")
