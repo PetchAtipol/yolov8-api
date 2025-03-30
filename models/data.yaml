@@ -1,0 +1,83 @@
+names:
+- almond
+- apple
+- asparagus
+- avocado
+- banana
+- beef
+- beet
+- bell_pepper
+- blueberries
+- bread
+- broccoli
+- butter
+- cabbage
+- carrot
+- cauliflower
+- celery
+- cheese
+- chicken
+- chilli_pepper
+- chillies
+- coriander
+- corn
+- cucumber
+- egg
+- eggplant
+- fish
+- flour
+- garlic
+- ginger
+- grapes
+- green beans
+- green_beans
+- green_onion
+- jam
+- juice
+- ketchup
+- lemon
+- lettuce
+- lime
+- mango
+- mayonaise
+- meat
+- milk
+- mushroom
+- mushrooms
+- mustard
+- oil
+- olive
+- onion
+- orange
+- pasta
+- peanut_butter
+- pear
+- peas
+- pineapple
+- plum
+- pork
+- potato
+- pumpkin
+- radish
+- rice
+- salmon
+- shrimp
+- soysauce
+- spinach
+- strawberry
+- sugar
+- sweet_potato
+- tomato
+- tomato_sauce
+- watermelon
+- yogurt
+nc: 72
+roboflow:
+  license: CC BY 4.0
+  project: recipeaiv2
+  url: https://universe.roboflow.com/recipeai-c4blh/recipeaiv2/dataset/1
+  version: 1
+  workspace: recipeai-c4blh
+test: ../test/images
+train: ../train/images
+val: ../valid/images

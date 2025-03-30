@@ -1,0 +1,6 @@
+# Ignore all .env files
+.env
+.env.*
+
+# Ignore Firebase service account key
+.uploadingfile-petch-firebase-adminsdk-fbsvc-2fc865a008.json
