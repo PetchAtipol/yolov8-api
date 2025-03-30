@@ -108,7 +108,7 @@ async def detect_latest():
         # Format response
         if detected_items:
             detected_text = ", ".join(detected_items)
-            response_text = f"ช่วยคิดเมนูที่สามารถทำได้ด้วยวัตถุดิบเหล่านี้หน่อย {detected_text}"
+            response_text = f"ช่วยคิดเมนูที่สามารถทำได้ด้วยวัตถุดิบเหล่านี้หน่อย  {detected_text}"
         else:
             response_text = "ไม่ตรวจพบวัตถุดิบในภาพ ช่วยคิดเมนูด้วยวัตถุดิบง่ายขึ้นมาหน่อย"
 

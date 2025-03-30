@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+firebase-admin
+requests
+Pillow
+ultralytics
+numpy
+python-dotenv
