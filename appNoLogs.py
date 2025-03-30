@@ -14,6 +14,7 @@ import numpy as np
 from ultralytics import YOLO
 import logging
 import matplotlib
+import contextlib
 
 app = FastAPI()
 load_dotenv()
@@ -22,13 +23,23 @@ load_dotenv()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://chefsense.netlify.app",
-        "http://localhost:3000"
-    ],
+    "https://chefsense.netlify.app",
+    "http://localhost:3000"
+    ],  # Change to frontend domain in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@contextlib.contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as fnull:
+        old_stdout = sys.stdout
+        sys.stdout = fnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
 
 # ✅ Firebase Configuration
 FIREBASE_CREDENTIALS = os.getenv('FIREBASE_CREDENTIALS')
@@ -36,38 +47,45 @@ cred = credentials.Certificate(FIREBASE_CREDENTIALS)
 FIREBASE_BUCKET_NAME = os.getenv('FIREBASE_BUCKET_NAME')
 
 if not firebase_admin._apps:
+    cred = credentials.Certificate(FIREBASE_CREDENTIALS)
     firebase_admin.initialize_app(cred, {"storageBucket": FIREBASE_BUCKET_NAME})
 
-# Optional: Only suppress font cache (but NOT YOLO logs)
-matplotlib.set_loglevel("ERROR")
-# logging.getLogger("ultralytics").setLevel(logging.WARNING)  ← ❌ don't suppress
+matplotlib.set_loglevel("ERROR")  # suppress font cache log
+logging.getLogger("ultralytics").setLevel(logging.WARNING)
 
 # ✅ Load YOLOv8 Model
 MODEL_PATH = "models/best50epoch.pt"
-model = YOLO(MODEL_PATH)
+with suppress_stdout():
+    model = YOLO(MODEL_PATH)
 model.to('cpu')
 model.fuse()
 
-# ✅ Load class names
+# ✅ Load class names from training config
 import yaml
 with open("models/data.yaml", "r", encoding="utf-8") as f:
     data = yaml.safe_load(f)
 class_names = data["names"]
 
-# ✅ Get latest image from Firebase
+
+
+# ✅ Helper: Get latest image URL from Firebase
 def get_latest_image_url():
     try:
         bucket = storage.bucket()
         blobs = list(bucket.list_blobs(prefix="ingredients/"))
+
         if not blobs:
             return None, "No images found in Firebase Storage."
+
         latest_blob = max(blobs, key=lambda blob: blob.time_created)
+
         latest_url = latest_blob.generate_signed_url(
             version="v4",
             expiration=timedelta(hours=1),
             method="GET"
         )
         return latest_url, None
+
     except Exception as e:
         return None, f"Error generating signed URL: {e}"
 
@@ -75,6 +93,7 @@ def get_latest_image_url():
 def root():
     return {"message": "✅ Chefsense API is running!"}
 
+# ✅ FastAPI Route for Detection
 @app.get("/detect/latest")
 async def detect_latest():
     try:
@@ -82,16 +101,25 @@ async def detect_latest():
         if error:
             return {"error": error}
 
+        # Download image from URL
         headers = {"User-Agent": "Mozilla/5.0"}
         response = requests.get(latest_url, headers=headers)
+
         if response.status_code != 200:
             return {"error": f"Failed to download image, HTTP {response.status_code}"}
 
-        image = Image.open(BytesIO(response.content)).convert("RGB")
+        try:
+            image = Image.open(BytesIO(response.content)).convert("RGB")
+        except Exception as e:
+            return {"error": f"Invalid image format: {e}"}
+
+        # Convert PIL image to numpy
         img_array = np.array(image)
 
+        # Run YOLOv8 detection
         results = model(img_array, imgsz=320, conf=0.25)
 
+        # Parse results
         detected_items = []
         for result in results:
             boxes = result.boxes
@@ -102,6 +130,7 @@ async def detect_latest():
                     name = class_names[label_idx]
                     detected_items.append(f"{name} ({conf_score:.2f})")
 
+        # Format response
         if detected_items:
             detected_text = ", ".join(detected_items)
             response_text = f"ช่วยคิดเมนูที่สามารถทำได้ด้วยวัตถุดิบเหล่านี้หน่อย  {detected_text}"
