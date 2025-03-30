@@ -1,8 +1,10 @@
 fastapi
-uvicorn
+uvicorn[standard]
+python-dotenv
 firebase-admin
 requests
-Pillow
-ultralytics
+pillow
 numpy
-python-dotenv
+pyyaml
+ultralytics
+matplotlib
