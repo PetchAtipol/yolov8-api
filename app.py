@@ -12,6 +12,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import numpy as np
 from ultralytics import YOLO
+import logging
+import matplotlib
+import contextlib
 
 app = FastAPI()
 load_dotenv()
@@ -28,6 +31,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@contextlib.contextmanager
+def suppress_stdout():
+    with open(os.devnull, "w") as fnull:
+        old_stdout = sys.stdout
+        sys.stdout = fnull
+        try:
+            yield
+        finally:
+            sys.stdout = old_stdout
 
 # ✅ Firebase Configuration
 FIREBASE_CREDENTIALS = os.getenv('FIREBASE_CREDENTIALS')
@@ -38,9 +50,13 @@ if not firebase_admin._apps:
     cred = credentials.Certificate(FIREBASE_CREDENTIALS)
     firebase_admin.initialize_app(cred, {"storageBucket": FIREBASE_BUCKET_NAME})
 
+matplotlib.set_loglevel("ERROR")  # suppress font cache log
+logging.getLogger("ultralytics").setLevel(logging.WARNING)
+
 # ✅ Load YOLOv8 Model
 MODEL_PATH = "models/best50epoch.pt"
-model = YOLO(MODEL_PATH)  # Automatically uses CPU or CUDA if available
+with suppress_stdout():
+    model = YOLO(MODEL_PATH)
 model.to('cpu')
 model.fuse()
 
@@ -128,3 +144,7 @@ async def detect_latest():
 
     except Exception as e:
         return {"error": str(e)}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
