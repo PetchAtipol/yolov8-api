@@ -38,9 +38,9 @@ FIREBASE_BUCKET_NAME = os.getenv('FIREBASE_BUCKET_NAME')
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred, {"storageBucket": FIREBASE_BUCKET_NAME})
 
-# Optional: Only suppress font cache (but NOT YOLO logs)
-matplotlib.set_loglevel("ERROR")
-# logging.getLogger("ultralytics").setLevel(logging.WARNING)  ← ❌ don't suppress
+# ✅ Show all logs (no suppression)
+# Remove matplotlib suppression
+# Remove ultralytics logging suppression
 
 # ✅ Load YOLOv8 Model
 MODEL_PATH = "models/best50epoch.pt"
@@ -88,9 +88,10 @@ async def detect_latest():
             return {"error": f"Failed to download image, HTTP {response.status_code}"}
 
         image = Image.open(BytesIO(response.content)).convert("RGB")
+        image = image.resize((224, 224))  # ✅ Resize ภาพก่อนแปลง
         img_array = np.array(image)
 
-        results = model(img_array, imgsz=320, conf=0.25)
+        results = model(img_array, imgsz=224, conf=0.25)
 
         detected_items = []
         for result in results:
