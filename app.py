@@ -88,10 +88,10 @@ async def detect_latest():
             return {"error": f"Failed to download image, HTTP {response.status_code}"}
 
         image = Image.open(BytesIO(response.content)).convert("RGB")
-        image = image.resize((224, 224))  # ✅ Resize ภาพก่อนแปลง
+        image = image.resize((320, 320))  # ✅ Resize ภาพก่อนแปลง
         img_array = np.array(image)
 
-        results = model(img_array, imgsz=224, conf=0.25)
+        results = model(img_array, imgsz=320, conf=0.25)
 
         detected_items = []
         for result in results:
